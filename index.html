@@ -78,9 +78,11 @@
       const letraTarget = 10; // Número significativo de letras a gerar
       const letrasValidas = [
         ...'abcdefghijklmnopqrstuvwxyz',
-        ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        ...'0123456789'
       ];
       let intervaloGeracao;
+      let tempoSemGerar = null; // Variável para armazenar o temporizador
 
       function enviar() {
         let texto = $('#entradaText').val();
@@ -105,14 +107,6 @@
         calculatePerceptron(binarioArray, tamanhoAleatorio);  // Chama a função com o array de bits e tamanho aleatório
       }
 
-      function sigmoid(x) {
-        return 1 / (1 + Math.exp(-x));
-      }
-
-      function stepFunction(value) {
-        return sigmoid(value) >= 0.5 ? 1 : 0;
-      }
-
       function nao() {
         $('#textoGerado').html('');
         letraCount = 0;
@@ -120,16 +114,14 @@
         const entradaAtual = $('#entradaText').val();
         const storedData = JSON.parse(localStorage.getItem('perceptronData')) || [];
 
-        // Checa se a entrada atual já foi processada anteriormente com uma saída negativa
         let matchFound = storedData.some(data => data.entrada === entradaAtual && data.saida !== $('#textoGerado').text());
 
         if (matchFound) {
           alert('Essa combinação de entrada/pesos já foi avaliada negativamente.');
         } else {
-          // Se não houver match, continue a gerar novas saídas
           weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
           bias = 0.2;
-          intervaloGeracao = setInterval(enviar, 10);
+          intervaloGeracao = setInterval(enviar, 05);
         }
       }
 
@@ -137,7 +129,6 @@
         const entrada = $('#entradaText').val();
         const saida = $('#textoGerado').text();
 
-        // Cria um objeto para armazenar as informações
         const jsonData = {
           entrada: entrada,
           saida: saida,
@@ -145,7 +136,6 @@
           weights: weights
         };
 
-        // Converte para JSON e armazena no localStorage
         const storedData = JSON.parse(localStorage.getItem('perceptronData')) || [];
         storedData.push(jsonData);
         localStorage.setItem('perceptronData', JSON.stringify(storedData));
@@ -155,7 +145,7 @@
 
       $('#nao').click(nao);
       $('#enviar').click(enviar);
-      //$('#sim').click(sim);
+      $('#sim').click(sim);
 
       function textToBinaryArray(text) {
         let binaryArray = [];
@@ -180,35 +170,42 @@
       }
 
       function calculatePerceptron(binarioArray, tamanhoSaida) {
-        $('.msgSoma').html(''); // Limpa a exibição anterior
+        $('.msgSoma').html('');
         let outputs = [];
         for (let i = 0; i < tamanhoSaida; i++) {
           let resultadosSoma = calculateSomaPorBit(binarioArray, weights, bias);
-          let result = stepFunction(resultadosSoma[i % binarioArray.length].soma); // Use % para garantir que não ultrapasse o tamanho do array
+          let result = stepFunction(resultadosSoma[i % binarioArray.length].soma);
           outputs.push(result);
-          $(`#output${i + 1}`).val(result); // Atualiza os inputs de saída com os resultados
+          $(`#output${i + 1}`).val(result);
           $('.msgSoma').append(`
             <strong>Para bit ${i + 1}:</strong><br>
             Soma: ${resultadosSoma[i % binarioArray.length].soma.toFixed(2)}<br>
             Resultado (stepFunction): ${result}<br><br>
           `);
         }
-        // Converter os binários de volta para texto
+
         let binarioString = outputs.join('');
         let textoGerado = binaryToText(binarioString);
         if (isValidLetter(textoGerado)) {
           letraCount++;
           $('#textoGerado').append(textoGerado + ' ');
 
+          // Reseta o temporizador de 5 segundos toda vez que uma nova letra válida é gerada
+          clearTimeout(tempoSemGerar);
+          tempoSemGerar = setTimeout(() => {
+            clearInterval(intervaloGeracao);
+            alert('Processo interrompido por 5 segundos sem gerar letras.');
+          }, 10000);
+
           if (letraCount >= letraTarget) {
-            clearInterval(intervaloGeracao); // Para a geração contínua
+            clearInterval(intervaloGeracao);
             alert('Número significativo de letras geradas.');
           }
         }
       }
 
       function generateOutputs(count) {
-        $('#saídas').html(''); // Limpa as saídas existentes
+        $('#saídas').html('');
         for (let i = 0; i < count; i++) {
           $('#saídas').append(`
             <div>
@@ -220,19 +217,15 @@
 
       function binaryToText(binaryString) {
         let texto = '';
-
-        // Certifique-se de que a
-        // Certifique-se de que a string binária tem um comprimento múltiplo de 8
         if (binaryString.length % 8 !== 0) {
           console.error("O comprimento da string binária não é múltiplo de 8");
           return 'Erro';
         }
 
-        // Percorre a string binária em blocos de 8 bits
         for (let i = 0; i < binaryString.length; i += 8) {
           let byte = binaryString.slice(i, i + 8);
-          let charCode = parseInt(byte, 2); // Converte o byte de binário para decimal (código ASCII)
-          let caractere = String.fromCharCode(charCode); // Converte o código ASCII para caractere
+          let charCode = parseInt(byte, 2);
+          let caractere = String.fromCharCode(charCode);
           texto += caractere;
         }
 
@@ -243,20 +236,18 @@
         return letrasValidas.includes(texto) || !isNaN(parseInt(texto, 10));
       }
 
-      // Inicia a geração contínua somente após clicar em "Enviar"
       $('#enviar').click(function () {
         if (intervaloGeracao) clearInterval(intervaloGeracao);
-        intervaloGeracao = setInterval(enviar, 10); // Ajuste o intervalo conforme necessário
+        intervaloGeracao = setInterval(enviar, 05);
       });
 
-      // Inicia a geração contínua somente após clicar em "Não"
       $('#nao').click(function () {
         $('#textoGerado').html('');
-        letraCount = 0; // Reinicia a contagem de letras
-        weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1); // Reinicializa os pesos
-        bias = 0.2; // Reinicializa o bias
+        letraCount = 0;
+        weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
+        bias = 0.2;
         if (intervaloGeracao) clearInterval(intervaloGeracao);
-        intervaloGeracao = setInterval(enviar, 10); // Ajuste o intervalo conforme necessário
+        intervaloGeracao = setInterval(enviar, 05);
       });
     });
   </script>
