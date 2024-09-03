@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Perceptron com Múltiplas Somas</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/v+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <style>
+    .input {
+      width: 50px;
+      height: 50px;
+      border-radius: 50px;
+      border: none;
+      background: lightblue;
+      font-size: 21px;
+    }
+
+    .output {
+      width: 50px;
+      height: 50px;
+      border-radius: 50px;
+      border: none;
+      background: lightgreen;
+      font-size: 21px;
+      text-align: center;
+    }
+  </style>
+
+  <div>
+    <h2>Perceptron com Múltiplas Somas</h2>
+  </div>
+  <div>
+    <div style="display: flex; justify-content: space-between;">
+      <div class="">
+        <input type="text" id="entradaText" placeholder="Digite o texto aqui">
+        <button id="enviar">Enviar</button>
+        <br>
+        <div id="saidaFinal">
+          Letras geradas: <span id="textoGerado"></span>
+        </div>
+        <br>
+        Resposta esperada?
+        <button id="sim">Sim</button>
+        <button id="nao">Não</button>
+      </div>
+      <div>
+        <div>
+          <p class="msgSoma" style="width: 300px;"></p>
+        </div>
+      </div>
+      <div id="saídas">
+        <!-- Os inputs de saída serão gerados dinamicamente aqui -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function stepFunction(value) {
+      return value >= 0 ? 1 : 0;
+    }
+
+    $(document).ready(function () {
+      const storedData = JSON.parse(localStorage.getItem('perceptronData')) || [];
+      let numInputs = 10;
+      let weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
+      let bias = 0.2;
+      let letraCount = 0;
+      const letraTarget = 10; // Número significativo de letras a gerar
+      const letrasValidas = [
+        ...'abcdefghijklmnopqrstuvwxyz',
+        ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      ];
+      let intervaloGeracao;
+
+      function enviar() {
+        let texto = $('#entradaText').val();
+        if (!texto) {
+          alert("Por favor, insira um texto.");
+          return;
+        }
+
+        let binarioArray = textToBinaryArray(texto);
+        console.log("Array binário: ", binarioArray);
+
+        // Gera um tamanho aleatório para a saída, que seja múltiplo de 8, entre 8 e 64 bits (ou outro intervalo)
+        let tamanhoAleatorio = Math.floor(Math.random() * (64 - 8 + 1)) + 8;
+
+        // Introduz aleatoriedade no bias e limita a variação
+        bias = Math.random() * 2 - 1;
+
+        // Ajusta a variação dos pesos
+        weights = weights.map(w => w + (Math.random() - 0.5) * 0.5);
+
+        generateOutputs(tamanhoAleatorio); // Gera saídas de tamanho aleatório
+        calculatePerceptron(binarioArray, tamanhoAleatorio);  // Chama a função com o array de bits e tamanho aleatório
+      }
+
+      function sigmoid(x) {
+        return 1 / (1 + Math.exp(-x));
+      }
+
+      function stepFunction(value) {
+        return sigmoid(value) >= 0.5 ? 1 : 0;
+      }
+
+      function nao() {
+        $('#textoGerado').html('');
+        letraCount = 0;
+
+        const entradaAtual = $('#entradaText').val();
+        const storedData = JSON.parse(localStorage.getItem('perceptronData')) || [];
+
+        // Checa se a entrada atual já foi processada anteriormente com uma saída negativa
+        let matchFound = storedData.some(data => data.entrada === entradaAtual && data.saida !== $('#textoGerado').text());
+
+        if (matchFound) {
+          alert('Essa combinação de entrada/pesos já foi avaliada negativamente.');
+        } else {
+          // Se não houver match, continue a gerar novas saídas
+          weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
+          bias = 0.2;
+          intervaloGeracao = setInterval(enviar, 10);
+        }
+      }
+
+      function sim() {
+        const entrada = $('#entradaText').val();
+        const saida = $('#textoGerado').text();
+
+        // Cria um objeto para armazenar as informações
+        const jsonData = {
+          entrada: entrada,
+          saida: saida,
+          bias: bias,
+          weights: weights
+        };
+
+        // Converte para JSON e armazena no localStorage
+        const storedData = JSON.parse(localStorage.getItem('perceptronData')) || [];
+        storedData.push(jsonData);
+        localStorage.setItem('perceptronData', JSON.stringify(storedData));
+
+        alert('Dados salvos com sucesso!');
+      }
+
+      $('#nao').click(nao);
+      $('#enviar').click(enviar);
+      //$('#sim').click(sim);
+
+      function textToBinaryArray(text) {
+        let binaryArray = [];
+        for (let i = 0; i < text.length; i++) {
+          let binary = text.charCodeAt(i).toString(2).padStart(8, '0');
+          for (let bit of binary) {
+            binaryArray.push(bit);
+          }
+        }
+        return binaryArray;
+      }
+
+      function calculateSomaPorBit(binarioArray, weights, bias) {
+        let resultados = [];
+        for (let x = 0; x < binarioArray.length; x++) {
+          let entrada = parseFloat(binarioArray[x]);
+          let weightedInput = entrada * weights[x % weights.length];
+          let soma = weightedInput + bias;
+          resultados.push({soma});
+        }
+        return resultados;
+      }
+
+      function calculatePerceptron(binarioArray, tamanhoSaida) {
+        $('.msgSoma').html(''); // Limpa a exibição anterior
+        let outputs = [];
+        for (let i = 0; i < tamanhoSaida; i++) {
+          let resultadosSoma = calculateSomaPorBit(binarioArray, weights, bias);
+          let result = stepFunction(resultadosSoma[i % binarioArray.length].soma); // Use % para garantir que não ultrapasse o tamanho do array
+          outputs.push(result);
+          $(`#output${i + 1}`).val(result); // Atualiza os inputs de saída com os resultados
+          $('.msgSoma').append(`
+            <strong>Para bit ${i + 1}:</strong><br>
+            Soma: ${resultadosSoma[i % binarioArray.length].soma.toFixed(2)}<br>
+            Resultado (stepFunction): ${result}<br><br>
+          `);
+        }
+        // Converter os binários de volta para texto
+        let binarioString = outputs.join('');
+        let textoGerado = binaryToText(binarioString);
+        if (isValidLetter(textoGerado)) {
+          letraCount++;
+          $('#textoGerado').append(textoGerado + ' ');
+
+          if (letraCount >= letraTarget) {
+            clearInterval(intervaloGeracao); // Para a geração contínua
+            alert('Número significativo de letras geradas.');
+          }
+        }
+      }
+
+      function generateOutputs(count) {
+        $('#saídas').html(''); // Limpa as saídas existentes
+        for (let i = 0; i < count; i++) {
+          $('#saídas').append(`
+            <div>
+              Output ${i + 1}: <input readonly class="output" id="output${i + 1}">
+            </div>
+          `);
+        }
+      }
+
+      function binaryToText(binaryString) {
+        let texto = '';
+
+        // Certifique-se de que a
+        // Certifique-se de que a string binária tem um comprimento múltiplo de 8
+        if (binaryString.length % 8 !== 0) {
+          console.error("O comprimento da string binária não é múltiplo de 8");
+          return 'Erro';
+        }
+
+        // Percorre a string binária em blocos de 8 bits
+        for (let i = 0; i < binaryString.length; i += 8) {
+          let byte = binaryString.slice(i, i + 8);
+          let charCode = parseInt(byte, 2); // Converte o byte de binário para decimal (código ASCII)
+          let caractere = String.fromCharCode(charCode); // Converte o código ASCII para caractere
+          texto += caractere;
+        }
+
+        return texto;
+      }
+
+      function isValidLetter(texto) {
+        return letrasValidas.includes(texto) || !isNaN(parseInt(texto, 10));
+      }
+
+      // Inicia a geração contínua somente após clicar em "Enviar"
+      $('#enviar').click(function () {
+        if (intervaloGeracao) clearInterval(intervaloGeracao);
+        intervaloGeracao = setInterval(enviar, 10); // Ajuste o intervalo conforme necessário
+      });
+
+      // Inicia a geração contínua somente após clicar em "Não"
+      $('#nao').click(function () {
+        $('#textoGerado').html('');
+        letraCount = 0; // Reinicia a contagem de letras
+        weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1); // Reinicializa os pesos
+        bias = 0.2; // Reinicializa o bias
+        if (intervaloGeracao) clearInterval(intervaloGeracao);
+        intervaloGeracao = setInterval(enviar, 10); // Ajuste o intervalo conforme necessário
+      });
+    });
+  </script>
+</body>
+
+</html>
