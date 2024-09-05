@@ -1,16 +1,34 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>Perceptron com Múltiplas Somas</title>
   <link href="style.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/v+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/v+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
+
 <body>
   <style>
+    @font-face {
+      font-family: 'hacker';
+      /* Nome que você usará no CSS */
+      src: url('./HackerNoonV2-Regular.otf') format('truetype');
+      /* Caminho para o arquivo da fonte */
+    }
+
+    body {
+      background: #000;
+      color: #18950e;
+      font-family: 'hacker', sans-serif;
+    }
+
     .input {
       width: 50px;
       height: 50px;
@@ -19,34 +37,55 @@
       background: lightblue;
       font-size: 21px;
     }
+
     .output {
       width: 50px;
       height: 50px;
       border-radius: 50px;
       border: none;
-      background: lightgreen;
+      background: none;
+      color: #18950e;
       font-size: 21px;
       text-align: center;
     }
-  </style>
 
-  <div>
-    <h2>Perceptron com Múltiplas Somas</h2>
-  </div>
-  <div>
-    <div style="display: flex; justify-content: space-between;">
-      <div>
-        <input type="text" id="entradaText" placeholder="Digite o texto aqui">
-        <button id="enviar">Enviar</button>
-        <br>
-        <div id="saidaFinal">
-          Letras geradas: <span id="textoGerado"></span>
-        </div>
-        <br>
-        Resposta esperada?
-        <button id="sim">Sim</button>
-        <button id="nao">Não</button>
-      </div>
+    #entradaText,
+    #esperado,
+    #enviar,
+    #sim,
+    #nao {
+      height: 50px;
+      background: none;
+      border: 3px solid green;
+      color: green;
+      font-size: 21px;
+    }
+
+    #entradaText,
+    #esperado {
+      width: 35%;
+    }
+
+    #enviar {
+      width: 20%;
+    }
+
+    #textoGerado {
+      font-size: 24px;
+    }
+
+    #terminalDeSaida {
+      overflow-y: scroll;
+      height: 100%;
+      border: 3px solid green;
+      display: flex;
+    }
+  </style>
+  <div style="height: 700px;">
+    <div>
+      <h2>Perceptron com Múltiplas Somas</h2>
+    </div>
+    <div id="terminalDeSaida">
       <div>
         <div>
           <p class="msgSoma" style="width: 300px;"></p>
@@ -55,6 +94,20 @@
       <div id="saídas">
         <!-- Os inputs de saída serão gerados dinamicamente aqui -->
       </div>
+    </div>
+    <div id="saidaFinal">
+      Letras geradas: <span id="textoGerado"></span>
+    </div>
+    <div>
+      <input type="text" id="entradaText" placeholder="Digite o texto">
+      <button id="enviar">Enviar</button>
+      <input type="text" id="esperado" placeholder="Resposta esperada">
+    </div>
+    <div>
+      <br>
+      Resposta esperada?
+      <button id="sim">Sim</button>
+      <button id="nao">Não</button>
     </div>
   </div>
 
@@ -87,15 +140,18 @@
         const totalPeso = weights.reduce((acc, peso) => acc + peso, 0);
         return weights.map(peso => (peso / totalPeso) * 100);
       }
-      
+
       function enviar() {
         let texto = $('#entradaText').val();
+        let esperado = $('#esperado').val();
         if (!texto) {
           alert("Por favor, insira um texto.");
           return;
         }
 
         let binarioArray = textToBinaryArray(texto);
+        let binarioEsperado = textToBinaryArray(esperado);
+
         console.log("Array binário: ", binarioArray);
 
         // Gera um tamanho aleatório para a saída, que seja múltiplo de 8, entre 8 e 64 bits (ou outro intervalo)
@@ -111,17 +167,29 @@
         calculatePerceptron(binarioArray, tamanhoAleatorio);  // Chama a função com o array de bits e tamanho aleatório
       }
 
-      $('#sim').click(function() {
+
+
+      $('#sim').click(function () {
         const entrada = $('#entradaText').val();
         const saida = $('#textoGerado').text();
         armazenarDados(entrada, saida, bias, weights, true);
       });
 
-      $('#nao').click(function() {
+      $('#nao').click(nao);
+
+      function nao() {
         const entrada = $('#entradaText').val();
         const saida = $('#textoGerado').text();
+
+        $('#textoGerado').html('');
+        letraCount = 0;
+        weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
+        bias = 0.2;
+        if (intervaloGeracao) clearInterval(intervaloGeracao);
+        intervaloGeracao = setInterval(enviar, 05); // Corrigido para 500ms
+
         armazenarDados(entrada, saida, bias, weights, false);
-      });
+      }
 
       function armazenarDados(entrada, saida, bias, weights, aprovacao) {
         const porcentagemPesos = calcularPorcentagemPesos(weights);
@@ -140,7 +208,7 @@
         // Salva os dados no localStorage
         localStorage.setItem('perceptronData', JSON.stringify(entradasSaidas));
 
-        alert('Dados salvos com sucesso!');
+        console.log('Dados salvos com sucesso!');
       }
 
       function textToBinaryArray(text) {
@@ -185,14 +253,15 @@
 
           $(`#output${i + 1}`).val(result);
           $('.msgSoma').append(`
-            <strong>Para bit ${i + 1}:</strong><br>
-            Soma: ${resultadosSoma[i % binarioArray.length].soma.toFixed(2)}<br>
-            Resultado (stepFunction): ${result}<br><br>
-          `);
+                  <strong>Para bit ${i + 1}:</strong><br>
+                  Soma: ${resultadosSoma[i % binarioArray.length].soma.toFixed(2)}<br>
+                  Resultado (stepFunction): ${result}<br><br>
+              `);
         }
 
         let binarioString = outputs.join('');
         let textoGerado = binaryToText(binarioString);
+
         if (isValidLetter(textoGerado)) {
           letraCount++;
           $('#textoGerado').append(textoGerado);
@@ -200,15 +269,40 @@
           // Reseta o temporizador de 5 segundos toda vez que uma nova letra válida é gerada
           clearTimeout(tempoSemGerar);
           tempoSemGerar = setTimeout(() => {
-            clearInterval(intervaloGeracao);
-            alert('Processo interrompido por 5 segundos sem gerar letras.');
+            nao();
+            //alert('Processo interrompido por 5 segundos sem gerar letras.');
           }, 10000);
 
           if (letraCount >= letraTarget) {
             clearInterval(intervaloGeracao);
-            alert('Número significativo de letras geradas.');
+            //alert('Número significativo de letras geradas.');
+
+            // Verifica a similaridade automaticamente após o processamento
+            const esperado = $('#esperado').val();
+            const similaridade = calcularSimilaridade(textoGerado, esperado);
+            console.log('Similaridade:', similaridade + '%');
+
+            if (similaridade > 70) { // Se a similaridade for maior que 70%
+              alert('O texto gerado é semelhante ao esperado!');
+            } else {
+              //alert('O texto gerado não corresponde ao esperado. Vamos tentar de novo');
+              nao();
+            }
           }
         }
+      }
+
+      function calcularSimilaridade(textoGerado, esperado) {
+        let matchCount = 0;
+        let minLength = Math.min(textoGerado.length, esperado.length);
+
+        for (let i = 0; i < minLength; i++) {
+          if (textoGerado[i] === esperado[i]) {
+            matchCount++;
+          }
+        }
+
+        return (matchCount / minLength) * 100; // Retorna a porcentagem de similaridade
       }
 
       function generateOutputs(count) {
@@ -222,7 +316,7 @@
         }
       }
 
-        function binaryToText(binaryString) {
+      function binaryToText(binaryString) {
         let texto = '';
         if (binaryString.length % 8 !== 0) {
           console.error("O comprimento da string binária não é múltiplo de 8");
@@ -237,26 +331,19 @@
         }
 
         return texto;
-        }
+      }
 
-        function isValidLetter(texto) {
+      function isValidLetter(texto) {
         return letrasValidas.includes(texto) || !isNaN(parseInt(texto, 10));
-        }
+      }
 
-        $('#enviar').click(function () {
+      $('#enviar').click(function () {
         if (intervaloGeracao) clearInterval(intervaloGeracao);
         intervaloGeracao = setInterval(enviar, 05); // Corrigido para 500ms
-        });
+      });
 
-        $('#nao').click(function () {
-        $('#textoGerado').html('');
-        letraCount = 0;
-        weights = Array(numInputs).fill(0).map(() => Math.random() * 2 - 1);
-        bias = 0.2;
-        if (intervaloGeracao) clearInterval(intervaloGeracao);
-        intervaloGeracao = setInterval(enviar, 05); // Corrigido para 500ms
-        });
-        });
-        </script>
-        </body>
-        </html>
+    });
+  </script>
+</body>
+
+</html>
