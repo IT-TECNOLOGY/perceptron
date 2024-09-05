@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>Perceptron com Múltiplas Somas</title>
+  <title>OITO</title>
   <link href="style.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
     integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/v+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
@@ -80,28 +80,49 @@
       border: 3px solid green;
       display: flex;
     }
+
+    button {
+      cursor: pointer;
+    }
+
+    #saidas {
+      display: flex;
+      height: 100%;
+    }
+
+    #saidas div {
+      width: 49%;
+    }
+
+    @media (max-width: 600px) {
+      #saidas {
+        display: block;
+      }
+    }
   </style>
   <div style="height: 700px;">
     <div>
       <h2>OITO</h2>
     </div>
-    <div id="terminalDeSaida">
-      <div>
+    <div id="saidas">
+      <div id="terminalDeSaida">
         <div>
-          <p class="msgSoma" style="width: 300px;"></p>
+          <div>
+            <p class="msgSoma" style="width: 300px;"></p>
+          </div>
+        </div>
+        <div id="saídas">
+          <!-- Os inputs de saída serão gerados dinamicamente aqui -->
         </div>
       </div>
-      <div id="saídas">
-        <!-- Os inputs de saída serão gerados dinamicamente aqui -->
+      <div id="saidaFinal">
+        Letras geradas: <span id="textoGerado"></span>
       </div>
-    </div>
-    <div id="saidaFinal">
-      Letras geradas: <span id="textoGerado"></span>
     </div>
     <div>
       <input type="text" id="entradaText" placeholder="Digite o texto">
-      <button id="enviar">Enviar</button>
       <input type="text" id="esperado" placeholder="Resposta esperada">
+      <button id="enviar">Enviar</button>
     </div>
     <div>
       <br>
